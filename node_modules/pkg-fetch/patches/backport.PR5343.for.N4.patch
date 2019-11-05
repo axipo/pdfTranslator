@@ -1,0 +1,61 @@
+From 6c8378b15bd9ca378df6e14d5b0d7032caefd774 Mon Sep 17 00:00:00 2001
+From: Jiho Choi <jray319@gmail.com>
+Date: Sat, 20 Feb 2016 20:44:06 -0600
+Subject: vm: fix `produceCachedData`
+
+Fix segmentation faults when compiling the same code with
+`produceCachedData` option. V8 ignores the option when the code is in
+its compilation cache and does not return cached data. Added
+`cachedDataProduced` property to `v8.Script` to denote whether the
+cached data is produced successfully.
+
+PR-URL: https://github.com/nodejs/node/pull/5343
+Reviewed-By: Fedor Indutny <fedor@indutny.com>
+
+diff --git a/src/env.h b/src/env.h
+index 5c99f80..c0b6dcd 100644
+--- a/src/env.h
++++ b/src/env.h
+@@ -54,10 +54,11 @@ namespace node {
+   V(buffer_string, "buffer")                                                  \
+   V(bytes_string, "bytes")                                                    \
+   V(bytes_parsed_string, "bytesParsed")                                       \
+   V(bytes_read_string, "bytesRead")                                           \
+   V(cached_data_string, "cachedData")                                         \
++  V(cached_data_produced_string, "cachedDataProduced")                        \
+   V(cached_data_rejected_string, "cachedDataRejected")                        \
+   V(callback_string, "callback")                                              \
+   V(change_string, "change")                                                  \
+   V(oncertcb_string, "oncertcb")                                              \
+   V(onclose_string, "_onclose")                                               \
+diff --git a/src/node_contextify.cc b/src/node_contextify.cc
+index 8769b53..4f63c20 100644
+--- a/src/node_contextify.cc
++++ b/src/node_contextify.cc
+@@ -522,15 +522,21 @@ class ContextifyScript : public BaseObject {
+       args.This()->Set(
+           env->cached_data_rejected_string(),
+           Boolean::New(env->isolate(), source.GetCachedData()->rejected));
+     } else if (compile_options == ScriptCompiler::kProduceCodeCache) {
+       const ScriptCompiler::CachedData* cached_data = source.GetCachedData();
+-      MaybeLocal<Object> buf = Buffer::Copy(
+-          env,
+-          reinterpret_cast<const char*>(cached_data->data),
+-          cached_data->length);
+-      args.This()->Set(env->cached_data_string(), buf.ToLocalChecked());
++      bool cached_data_produced = cached_data != nullptr;
++      if (cached_data_produced) {
++        MaybeLocal<Object> buf = Buffer::Copy(
++            env,
++            reinterpret_cast<const char*>(cached_data->data),
++            cached_data->length);
++        args.This()->Set(env->cached_data_string(), buf.ToLocalChecked());
++      }
++      args.This()->Set(
++          env->cached_data_produced_string(),
++          Boolean::New(env->isolate(), cached_data_produced));
+     }
+   }
+ 
+ 
+   static bool InstanceOf(Environment* env, const Local<Value>& value) {

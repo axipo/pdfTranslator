@@ -1,0 +1,2 @@
+import { StringOrTranslateOptions, TranslateResult } from '../types';
+export default function (options: StringOrTranslateOptions): Promise<TranslateResult>;

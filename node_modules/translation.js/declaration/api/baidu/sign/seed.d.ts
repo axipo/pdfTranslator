@@ -1,0 +1,4 @@
+export default function (): Promise<{
+    seed: any;
+    token: any;
+}>;

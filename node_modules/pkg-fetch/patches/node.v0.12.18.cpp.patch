@@ -1,0 +1,408 @@
+--- node/deps/v8/include/v8.h
++++ node/deps/v8/include/v8.h
+@@ -4826,10 +4826,14 @@
+    */
+   static void SetFlagsFromCommandLine(int* argc,
+                                       char** argv,
+                                       bool remove_flags);
+ 
++  static void EnableCompilationForSourcelessUse();
++  static void DisableCompilationForSourcelessUse();
++  static void FixSourcelessScript(Isolate* v8_isolate, Local<UnboundScript> script);
++
+   /** Get the version string. */
+   static const char* GetVersion();
+ 
+   /** Callback function for reporting failed access checks.*/
+   static void SetFailedAccessCheckCallbackFunction(FailedAccessCheckCallback);
+--- node/deps/v8/src/api.cc
++++ node/deps/v8/src/api.cc
+@@ -391,10 +391,46 @@
+ void V8::SetFlagsFromCommandLine(int* argc, char** argv, bool remove_flags) {
+   i::FlagList::SetFlagsFromCommandLine(argc, argv, remove_flags);
+ }
+ 
+ 
++bool save_lazy;
++bool save_predictable;
++bool save_serialize_toplevel;
++
++
++void V8::EnableCompilationForSourcelessUse() {
++  save_lazy = i::FLAG_lazy;
++  i::FLAG_lazy = false;
++  save_predictable = i::FLAG_predictable;
++  i::FLAG_predictable = true;
++  save_serialize_toplevel = i::FLAG_serialize_toplevel;
++  i::FLAG_serialize_toplevel = true;
++  i::CpuFeatures::Reinitialize();
++  i::CpuFeatures::Probe(true);
++}
++
++
++void V8::DisableCompilationForSourcelessUse() {
++  i::FLAG_lazy = save_lazy;
++  i::FLAG_predictable = save_predictable;
++  i::FLAG_serialize_toplevel = save_serialize_toplevel;
++  i::CpuFeatures::Reinitialize();
++  i::CpuFeatures::Probe(false);
++}
++
++
++void V8::FixSourcelessScript(Isolate* v8_isolate, Local<UnboundScript> script) {
++  i::Isolate* isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
++  i::Handle<i::HeapObject> object = i::Handle<i::HeapObject>::cast(Utils::OpenHandle(*script));
++  i::Handle<i::SharedFunctionInfo> function_info(
++    i::SharedFunctionInfo::cast(*object), object->GetIsolate());
++  i::Script* s = reinterpret_cast<i::Script*>(function_info->script());
++  s->set_source(isolate->heap()->undefined_value());
++}
++
++
+ RegisteredExtension* RegisteredExtension::first_extension_ = NULL;
+ 
+ 
+ RegisteredExtension::RegisteredExtension(Extension* extension)
+     : extension_(extension) { }
+--- node/deps/v8/src/assembler.h
++++ node/deps/v8/src/assembler.h
+@@ -196,10 +196,15 @@
+   static void PrintFeatures();
+ 
+   // Flush instruction cache.
+   static void FlushICache(void* start, size_t size);
+ 
++  static void Reinitialize() {
++    supported_ = 0;
++    initialized_ = false;
++  }
++
+  private:
+   // Platform-dependent implementation.
+   static void ProbeImpl(bool cross_compile);
+ 
+   static unsigned supported_;
+--- node/deps/v8/src/parser.cc
++++ node/deps/v8/src/parser.cc
+@@ -4838,10 +4838,11 @@
+   return !parser.failed();
+ }
+ 
+ 
+ bool Parser::Parse() {
++  if (info()->script()->source()->IsUndefined()) return false;
+   DCHECK(info()->function() == NULL);
+   FunctionLiteral* result = NULL;
+   ast_value_factory_ = info()->ast_value_factory();
+   if (ast_value_factory_ == NULL) {
+     ast_value_factory_ =
+--- node/deps/v8/src/serialize.cc
++++ node/deps/v8/src/serialize.cc
+@@ -2167,11 +2167,11 @@
+             payload->begin(), static_cast<size_t>(payload->length()));
+ }
+ 
+ 
+ bool SerializedCodeData::IsSane(String* source) {
+-  return GetHeaderValue(kCheckSumOffset) == CheckSum(source) &&
++  return true &&
+          PayloadLength() >= SharedFunctionInfo::kSize;
+ }
+ 
+ 
+ int SerializedCodeData::CheckSum(String* string) {
+--- node/lib/child_process.js
++++ node/lib/child_process.js
+@@ -579,11 +579,11 @@
+   options.stdio = options.silent ? ['pipe', 'pipe', 'pipe', 'ipc'] :
+       [0, 1, 2, 'ipc'];
+ 
+   options.execPath = options.execPath || process.execPath;
+ 
+-  return spawn(options.execPath, args, options);
++  return exports.spawn(options.execPath, args, options);
+ };
+ 
+ 
+ exports._forkChild = function(fd) {
+   // set process.send()
+--- node/src/env.h
++++ node/src/env.h
+@@ -202,10 +202,11 @@
+   V(signal_string, "signal")                                                  \
+   V(size_string, "size")                                                      \
+   V(smalloc_p_string, "_smalloc_p")                                           \
+   V(sni_context_err_string, "Invalid SNI context")                            \
+   V(sni_context_string, "sni_context")                                        \
++  V(sourceless_string, "sourceless")                                          \
+   V(speed_string, "speed")                                                    \
+   V(stack_string, "stack")                                                    \
+   V(status_code_string, "statusCode")                                         \
+   V(status_message_string, "statusMessage")                                   \
+   V(status_string, "status")                                                  \
+--- node/src/node.cc
++++ node/src/node.cc
+@@ -2957,10 +2957,11 @@
+ }
+ 
+ static void PrintHelp();
+ 
+ static bool ParseDebugOpt(const char* arg) {
++  return false;
+   const char* port = NULL;
+ 
+   if (!strcmp(arg, "--debug")) {
+     use_debug_agent = true;
+   } else if (!strncmp(arg, "--debug=", sizeof("--debug=") - 1)) {
+@@ -3575,14 +3576,10 @@
+   // Ignore SIGPIPE
+   RegisterSignalHandler(SIGPIPE, SIG_IGN);
+   RegisterSignalHandler(SIGINT, SignalExit, true);
+   RegisterSignalHandler(SIGTERM, SignalExit, true);
+ #endif  // __POSIX__
+-
+-  if (!use_debug_agent) {
+-    RegisterDebugSignalHandler();
+-  }
+ }
+ 
+ 
+ struct AtExitCallback {
+   AtExitCallback* next_;
+@@ -3761,15 +3758,10 @@
+   const char* replaceInvalid = getenv("NODE_INVALID_UTF8");
+ 
+   if (replaceInvalid == NULL)
+     WRITE_UTF8_FLAGS |= String::REPLACE_INVALID_UTF8;
+ 
+-#if !defined(_WIN32)
+-  // Try hard not to lose SIGUSR1 signals during the bootstrap process.
+-  InstallEarlyDebugSignalHandler();
+-#endif
+-
+   assert(argc > 0);
+ 
+   // Hack around with the argv pointer. Used for process.title = "blah".
+   argv = uv_setup_args(argc, argv);
+ 
+--- node/src/node.js
++++ node/src/node.js
+@@ -65,10 +65,46 @@
+     // There are various modes that Node can run in. The most common two
+     // are running from a script and running the REPL - but there are a few
+     // others like the debugger or running --eval arguments. Here we decide
+     // which mode we run in.
+ 
++    (function () {
++      var fs = NativeModule.require('fs');
++      var vm = NativeModule.require('vm');
++      function readPrelude (fd) {
++        var PAYLOAD_POSITION = '// PAYLOAD_POSITION //' | 0;
++        var PAYLOAD_SIZE = '// PAYLOAD_SIZE //' | 0;
++        var PRELUDE_POSITION = '// PRELUDE_POSITION //' | 0;
++        var PRELUDE_SIZE = '// PRELUDE_SIZE //' | 0;
++        if (!PRELUDE_POSITION) {
++          // no prelude - remove entrypoint from argv[1]
++          process.argv.splice(1, 1);
++          return { undoPatch: true };
++        }
++        var prelude = new Buffer(PRELUDE_SIZE);
++        var read = fs.readSync(fd, prelude, 0, PRELUDE_SIZE, PRELUDE_POSITION);
++        if (read !== PRELUDE_SIZE) {
++          console.error('Pkg: Error reading from file.');
++          process.exit(1);
++        }
++        var s = new vm.Script(prelude, { filename: 'pkg/prelude/bootstrap.js' });
++        var fn = s.runInThisContext();
++        return fn(process, NativeModule.require,
++          console, fd, PAYLOAD_POSITION, PAYLOAD_SIZE);
++      }
++      (function () {
++        var fd = fs.openSync(process.execPath, 'r');
++        var result = readPrelude(fd);
++        if (result && result.undoPatch) {
++          var bindingFs = process.binding('fs');
++          fs.internalModuleStat = bindingFs.internalModuleStat;
++          fs.internalModuleReadFile = bindingFs.internalModuleReadFile;
++          fs.closeSync(fd);
++        }
++      }());
++    }());
++
+     if (NativeModule.exists('_third_party_main')) {
+       // To allow people to extend Node in different ways, this hook allows
+       // one to drop a file lib/_third_party_main.js into the build
+       // directory which will be executed instead of Node's normal loading.
+       process.nextTick(function() {
+--- node/src/node_contextify.cc
++++ node/src/node_contextify.cc
+@@ -487,10 +487,11 @@
+     Local<String> code = args[0]->ToString();
+     Local<String> filename = GetFilenameArg(args, 1);
+     bool display_errors = GetDisplayErrorsArg(args, 1);
+     Local<Value> cached_data_buf = GetCachedData(args, 1);
+     bool produce_cached_data = GetProduceCachedData(args, 1);
++    bool sourceless = GetSourceless(args, 1);
+     if (try_catch.HasCaught()) {
+       try_catch.ReThrow();
+       return;
+     }
+ 
+@@ -509,22 +510,35 @@
+     if (source.GetCachedData() != NULL)
+       compile_options = ScriptCompiler::kConsumeCodeCache;
+     else if (produce_cached_data)
+       compile_options = ScriptCompiler::kProduceCodeCache;
+ 
++    if (sourceless && compile_options == ScriptCompiler::kProduceCodeCache) {
++      V8::EnableCompilationForSourcelessUse();
++    }
++
+     Local<UnboundScript> v8_script = ScriptCompiler::CompileUnbound(
+         env->isolate(),
+         &source,
+         compile_options);
+ 
++    if (sourceless && compile_options == ScriptCompiler::kProduceCodeCache) {
++      V8::DisableCompilationForSourcelessUse();
++    }
++
+     if (v8_script.IsEmpty()) {
+       if (display_errors) {
+         AppendExceptionLine(env, try_catch.Exception(), try_catch.Message());
+       }
+       try_catch.ReThrow();
+       return;
+     }
++
++    if (sourceless && compile_options == ScriptCompiler::kConsumeCodeCache) {
++      V8::FixSourcelessScript(env->isolate(), v8_script);
++    }
++
+     contextify_script->script_.Reset(env->isolate(), v8_script);
+ 
+     if (compile_options == ScriptCompiler::kConsumeCodeCache) {
+       // no 'rejected' field in cachedData
+     } else if (compile_options == ScriptCompiler::kProduceCodeCache) {
+@@ -733,10 +747,23 @@
+ 
+     return value->IsTrue();
+   }
+ 
+ 
++  static bool GetSourceless(
++      const FunctionCallbackInfo<Value>& args,
++      const int i) {
++    if (!args[i]->IsObject()) {
++      return false;
++    }
++    Local<String> key = FIXED_ONE_BYTE_STRING(args.GetIsolate(), "sourceless");
++    Local<Value> value = args[i].As<Object>()->Get(key);
++
++    return value->IsTrue();
++  }
++
++
+   static bool EvalMachine(Environment* env,
+                           const int64_t timeout,
+                           const bool display_errors,
+                           const FunctionCallbackInfo<Value>& args,
+                           TryCatch& try_catch) {
+--- node/src/node_main.cc
++++ node/src/node_main.cc
+@@ -19,10 +19,12 @@
+ // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+ // USE OR OTHER DEALINGS IN THE SOFTWARE.
+ 
+ #include "node.h"
+ 
++int reorder(int argc, char** argv);
++
+ #ifdef _WIN32
+ int wmain(int argc, wchar_t *wargv[]) {
+   // Convert argv to to UTF8
+   char** argv = new char*[argc];
+   for (int i = 0; i < argc; i++) {
+@@ -55,13 +57,80 @@
+       fprintf(stderr, "Could not convert arguments to utf8.");
+       exit(1);
+     }
+   }
+   // Now that conversion is done, we can finally start.
+-  return node::Start(argc, argv);
++  return reorder(argc, argv);
+ }
+ #else
+ // UNIX
+ int main(int argc, char *argv[]) {
+-  return node::Start(argc, argv);
++  return reorder(argc, argv);
++}
++#endif
++
++#include <string.h>
++
++int strlen2 (char* s) {
++  int len = 0;
++  while (*s) {
++    len += 1;
++    s += 1;
++  }
++  return len;
+ }
++
++bool should_set_dummy() {
++#ifdef __POSIX__
++  const char* execpath_env = getenv("PKG_EXECPATH");
++  if (!execpath_env) return true;
++  return strcmp(execpath_env, "PKG_INVOKE_NODEJS") != 0;
++#else
++  #define MAX_ENV_LENGTH 32767
++  char execpath_env[MAX_ENV_LENGTH];
++  DWORD result = GetEnvironmentVariable("PKG_EXECPATH", execpath_env, MAX_ENV_LENGTH);
++  if (result == 0 && GetLastError() != ERROR_SUCCESS) return true;
++  return strcmp(execpath_env, "PKG_INVOKE_NODEJS") != 0;
+ #endif
++}
++
++// for uv_setup_args
++int adjacent(int argc, char** argv) {
++  size_t size = 0;
++  for (int i = 0; i < argc; i++) {
++    size += strlen(argv[i]) + 1;
++  }
++  char* args = new char[size];
++  size_t pos = 0;
++  for (int i = 0; i < argc; i++) {
++    memcpy(&args[pos], argv[i], strlen(argv[i]) + 1);
++    argv[i] = &args[pos];
++    pos += strlen(argv[i]) + 1;
++  }
++  return node::Start(argc, argv);
++}
++
++volatile char* BAKERY = (volatile char*) "\0// BAKERY // BAKERY " \
++  "// BAKERY // BAKERY // BAKERY // BAKERY // BAKERY // BAKERY " \
++  "// BAKERY // BAKERY // BAKERY // BAKERY // BAKERY // BAKERY " \
++  "// BAKERY // BAKERY // BAKERY // BAKERY // BAKERY // BAKERY ";
++
++int reorder(int argc, char** argv) {
++  int i;
++  char** nargv = new char*[argc + 64];
++  int c = 0;
++  nargv[c++] = argv[0];
++  char* bakery = (char*) BAKERY;
++  while (true) {
++    size_t width = strlen2(bakery);
++    if (width == 0) break;
++    nargv[c++] = bakery;
++    bakery += width + 1;
++  }
++  if (should_set_dummy()) {
++    nargv[c++] = (char*) "PKG_DUMMY_ENTRYPOINT";
++  }
++  for (i = 1; i < argc; i++) {
++    nargv[c++] = argv[i];
++  }
++  return adjacent(c, nargv);
++}

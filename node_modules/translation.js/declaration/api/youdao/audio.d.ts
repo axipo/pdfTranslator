@@ -1,0 +1,4 @@
+import { StringOrTranslateOptions } from '../types';
+import { StringObject } from '../../types';
+export declare const standard2custom: StringObject;
+export default function (options: StringOrTranslateOptions): Promise<string>;

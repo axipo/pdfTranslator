@@ -1,0 +1,51 @@
+From 6c8378b15bd9ca378df6e14d5b0d7032caefd774 Mon Sep 17 00:00:00 2001
+From: Jiho Choi <jray319@gmail.com>
+Date: Sat, 20 Feb 2016 20:44:06 -0600
+Subject: vm: fix `produceCachedData`
+
+Fix segmentation faults when compiling the same code with
+`produceCachedData` option. V8 ignores the option when the code is in
+its compilation cache and does not return cached data. Added
+`cachedDataProduced` property to `v8.Script` to denote whether the
+cached data is produced successfully.
+
+PR-URL: https://github.com/nodejs/node/pull/5343
+Reviewed-By: Fedor Indutny <fedor@indutny.com>
+
+diff --git a/src/node_contextify.cc b/src/node_contextify.cc
+index 1b3d618..dfc51e9 100644
+--- a/src/node_contextify.cc
++++ b/src/node_contextify.cc
+@@ -527,17 +527,25 @@ class ContextifyScript : public BaseObject {
+ 
+     if (compile_options == ScriptCompiler::kConsumeCodeCache) {
+       // no 'rejected' field in cachedData
+     } else if (compile_options == ScriptCompiler::kProduceCodeCache) {
+       const ScriptCompiler::CachedData* cached_data = source.GetCachedData();
+-      Local<Object> buf = Buffer::New(
+-          env,
+-          reinterpret_cast<const char*>(cached_data->data),
+-          cached_data->length);
+-      Local<String> cached_data_string = FIXED_ONE_BYTE_STRING(
+-          args.GetIsolate(), "cachedData");
+-      args.This()->Set(cached_data_string, buf);
++      bool cached_data_produced = cached_data != NULL;
++      if (cached_data_produced) {
++        Local<Object> buf = Buffer::New(
++            env,
++            reinterpret_cast<const char*>(cached_data->data),
++            cached_data->length);
++        Local<String> cached_data_string = FIXED_ONE_BYTE_STRING(
++            args.GetIsolate(), "cachedData");
++        args.This()->Set(cached_data_string, buf);
++      }
++      Local<String> cached_data_produced_string = FIXED_ONE_BYTE_STRING(
++          args.GetIsolate(), "cachedDataProduced");
++      args.This()->Set(
++          cached_data_produced_string,
++          Boolean::New(env->isolate(), cached_data_produced));
+     }
+   }
+ 
+ 
+   static bool InstanceOf(Environment* env, const Local<Value>& value) {

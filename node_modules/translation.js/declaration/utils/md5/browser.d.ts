@@ -1,0 +1,2 @@
+import bluemd5 from 'blueimp-md5';
+export default bluemd5;

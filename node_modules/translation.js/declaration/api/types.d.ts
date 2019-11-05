@@ -1,0 +1,26 @@
+/** 单个音标的数据结构 */
+export interface Phonetic {
+    name: string;
+    ttsURI: string;
+    value: string;
+}
+/** 统一的查询结果的数据结构 */
+export interface TranslateResult {
+    text: string;
+    raw: any;
+    link: string;
+    from: string;
+    to: string;
+    phonetic?: string | Phonetic[];
+    dict?: string[];
+    result?: string[];
+}
+/** 统一的查询参数结构 */
+export interface TranslateOptions {
+    text: string;
+    from?: string;
+    to?: string;
+    com?: boolean;
+}
+/** 查询参数，既可以是字符串，也可以是对象 */
+export declare type StringOrTranslateOptions = string | TranslateOptions;

@@ -1,0 +1,11 @@
+import { StringOrTranslateOptions } from '../types';
+/**
+ * 生成百度语音地址
+ * @param text 要朗读的文本
+ * @param lang 文本的语种，使用百度自定义的语种名称
+ */
+export declare function getAudioURI(text: string, lang: string): string;
+/**
+ * 获取指定文本的网络语音地址
+ */
+export default function (options: StringOrTranslateOptions): Promise<string>;

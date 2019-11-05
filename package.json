@@ -1,0 +1,30 @@
+{
+  "name": "node_google_translate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ecstatic": "3.0.0",
+    "express": "^4.17.1",
+    "open": "^7.0.0",
+    "translation.js": "^0.7.12"
+  },
+  "devDependencies": {
+    "pkg": "^4.4.0"
+  },
+  "bin": "index.js",
+  "pkg": {
+    "assets": [
+      "web/*",
+      "build/*",
+      "web/*/*",
+      "web/*/*/*"
+    ]
+  }
+}

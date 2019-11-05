@@ -1,0 +1,6 @@
+/**
+ * 从百度网页翻译中复制过来的计算签名的代码
+ * @param text 要查询的文本
+ * @param seed 从 ./seed.ts 获取到的 seed
+ */
+export default function (text: string, seed: string): string;

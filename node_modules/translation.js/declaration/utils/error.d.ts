@@ -1,0 +1,10 @@
+export declare const enum ERROR_CODE {
+    NETWORK_TIMEOUT = "NETWORK_TIMEOUT",
+    NETWORK_ERROR = "NETWORK_ERROR",
+    API_SERVER_ERROR = "API_SERVER_ERROR",
+    UNSUPPORTED_LANG = "UNSUPPORTED_LANG"
+}
+export interface TranslateError extends Error {
+    code: ERROR_CODE;
+}
+export default function (code: ERROR_CODE, msg?: string): TranslateError;

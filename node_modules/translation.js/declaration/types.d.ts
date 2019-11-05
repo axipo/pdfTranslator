@@ -1,0 +1,4 @@
+/** 键和值都是字符串的对象 */
+export interface StringObject {
+    [prop: string]: string;
+}

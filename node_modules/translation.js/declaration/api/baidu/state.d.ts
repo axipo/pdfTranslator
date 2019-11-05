@@ -1,0 +1,10 @@
+import { StringObject } from '../../types';
+export declare const root = "https://fanyi.baidu.com";
+export declare const Cookie = "BAIDUID=0F8E1A72A51EE47B7CA0A81711749C00:FG=1;";
+/**
+ * 百度支持的语种到百度自定义的语种名的映射，去掉了文言文。
+ * @see http://api.fanyi.baidu.com/api/trans/product/apidoc#languageList
+ */
+export declare const standard2custom: StringObject;
+/** 百度自定义的语种名到标准语种名的映射 */
+export declare const custom2standard: StringObject;

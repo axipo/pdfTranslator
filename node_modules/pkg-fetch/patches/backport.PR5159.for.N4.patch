@@ -1,0 +1,39 @@
+From 16b0a8c1acb97a84e9a6e1868d600c525f27b0ec Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C3=ABl=20Zasso?= <mic.besace@gmail.com>
+Date: Mon, 8 Feb 2016 22:36:40 +0100
+Subject: src: replace usage of deprecated CompileUnbound
+
+PR-URL: https://github.com/nodejs/node/pull/5159
+Reviewed-By: Ben Noordhuis <info@bnoordhuis.nl>
+
+diff --git a/src/node_contextify.cc b/src/node_contextify.cc
+index ecf9444..8769b53 100644
+--- a/src/node_contextify.cc
++++ b/src/node_contextify.cc
+@@ -501,11 +501,11 @@ class ContextifyScript : public BaseObject {
+     if (source.GetCachedData() != nullptr)
+       compile_options = ScriptCompiler::kConsumeCodeCache;
+     else if (produce_cached_data)
+       compile_options = ScriptCompiler::kProduceCodeCache;
+ 
+-    Local<UnboundScript> v8_script = ScriptCompiler::CompileUnbound(
++    MaybeLocal<UnboundScript> v8_script = ScriptCompiler::CompileUnboundScript(
+         env->isolate(),
+         &source,
+         compile_options);
+ 
+     if (v8_script.IsEmpty()) {
+@@ -513,11 +513,12 @@ class ContextifyScript : public BaseObject {
+         AppendExceptionLine(env, try_catch.Exception(), try_catch.Message());
+       }
+       try_catch.ReThrow();
+       return;
+     }
+-    contextify_script->script_.Reset(env->isolate(), v8_script);
++    contextify_script->script_.Reset(env->isolate(),
++                                     v8_script.ToLocalChecked());
+ 
+     if (compile_options == ScriptCompiler::kConsumeCodeCache) {
+       args.This()->Set(
+           env->cached_data_rejected_string(),
+           Boolean::New(env->isolate(), source.GetCachedData()->rejected));

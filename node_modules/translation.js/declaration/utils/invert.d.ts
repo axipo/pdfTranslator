@@ -1,0 +1,3 @@
+import { StringObject } from '../types';
+/** 反转对象 */
+export default function (obj: StringObject): StringObject;
