@@ -27,14 +27,20 @@ const getTransRes = function(queryWord) {
       return promise;
   }
   
-
+var toolbarContainer = document.getElementById('toolbarContainer');
 var transResEle = document.getElementById('transRes');
+var transResEleContainer = document.getElementById('transResContainer');
+var showRes = false;
 function showPop(value){
-    if(value === ''){
+    if(value === '' && showRes === true){
+      transResEleContainer.remove();
       transResEle.style.visibility = 'hidden';
-    }else{
+      showRes = false;
+    }else if(value !== '' && showRes === false){
       transResEle.style.visibility = 'visible';
+      toolbarContainer.insertBefore(transResEleContainer, toolbarContainer.firstChild);
       transResEle.innerHTML = value;
+      showRes = true;
     }
 }
 function clickFun(event){
