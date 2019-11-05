@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ecstatic": "3.0.0",
+    "ecstatic": "3.3.2",
     "express": "^4.17.1",
     "open": "^7.0.0",
     "translation.js": "^0.7.12"
