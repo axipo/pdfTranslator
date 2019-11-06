@@ -1,6 +1,6 @@
 # pdfTranslator
 
-一个具有划词翻译功能的pdf阅读器，用着挺好用开源一下帮助众科研狗，欢迎star
+一个具有划词翻译功能的pdf阅读器，用起来非常的爽！开源一下帮助众科研狗，欢迎star
 
 阅读论文并且想用翻译的时候，经常面临的一个问题就是要在pdf阅读器和谷歌翻译之间切换，非常容易打乱思绪，有一个良好的工具可以实现更好的工作流。
 
@@ -35,6 +35,8 @@
 
 win端直接[下载](https://github.com/axipo/pdfTranslator/releases)使用即可
 
+> **注意细节**： 在弹出翻译卡片后，通过点击非卡片区域（空白区域）取消卡片显示。此时才能进行下一次选择，当翻译卡片显示时划词是**不会更新结果**的。
+
 ### Linux & Mac OS
 
     git clone https://github.com/axipo/pdfTranslator.git
@@ -51,7 +53,12 @@ win端直接[下载](https://github.com/axipo/pdfTranslator/releases)使用即�
 
 ## To-Do
 
-有时间把有道翻译和必应翻译也加上吧（咕咕咕
-有时间把Linux和mac的打包版本也导出好（咕咕咕+1
-↑估计要等空闲一点搞，最近真的忙...
+- 有时间把有道翻译和必应翻译也加上吧（咕咕咕
 
+- 有时间把Linux和mac的打包版本也导出好（咕咕咕+1
+
+**↑估计要等空闲一点再搞，最近真的忙...**
+
+## 请我喝杯咖啡？
+
+![收款码](https://cdn.0x00.eu.org/d/XxcO1sJGMi.png)
