@@ -2,6 +2,8 @@
 
 一个具有划词翻译功能的pdf阅读器，用起来非常的爽！开源一下帮助众科研狗，欢迎star
 
+**`「太长不读者通道：」`** [点此下载](https://github.com/axipo/pdfTranslator/releases)，双击打开
+
 阅读论文并且想用翻译的时候，经常面临的一个问题就是要在pdf阅读器和谷歌翻译之间切换，非常容易打乱思绪，有一个良好的工具可以实现更好的工作流。
 
 常用的几种解决方案有本地监控剪切板变化，本地监控快捷键，浏览器油猴插件等等。
@@ -33,7 +35,7 @@
 
 ### windows
 
-win端直接[下载](https://github.com/axipo/pdfTranslator/releases)使用即可
+win端直接[下载](https://github.com/axipo/pdfTranslator/releases)，双击打开使用即可
 
 > **注意细节**： 在弹出翻译卡片后，通过点击非卡片区域（空白区域）取消卡片显示。此时才能进行下一次选择，当翻译卡片显示时划词是**不会更新结果**的。
 

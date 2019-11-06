@@ -184,19 +184,6 @@ See https://github.com/adobe-type-tools/cmap-resources
 
         <div class="toolbar">
           <div id="toolbarContainer">
-            <div id="transResContainer" style="position: fixed; top:45px; left:0; width: 33%;margin-left: 33%; z-index: 99999;">
-              <div id="transRes" style="width: 100%; background-color:cyan; margin: 0 auto;
-              color: rgba(0,0,0,.75);
-              background-color: rgb(200,230,240);
-              padding: 1.5rem;
-              visibility: hidden;
-    box-shadow: rgba(0,0,0,0.2) 1px 1px;
-    border-radius: 1.2rem;
-    font-size: 16px;
-    font-family: Lato,Helvetica Neue,Helvetica,sans-serif;
-    font-variant-ligatures: common-ligatures;
-    line-height: 1.67;"> </div>
-            </div>
             <div id="toolbarViewer">
               <div id="toolbarViewerLeft">
                 <button id="sidebarToggle" class="toolbarButton" title="Toggle Sidebar" tabindex="11" data-l10n-id="toggle_sidebar">
@@ -294,6 +281,23 @@ See https://github.com/adobe-type-tools/cmap-resources
         </menu>
 
         <div id="viewerContainer" tabindex="0">
+            <div id="transRes" style="
+              width: 33%;
+              padding: 1.5rem;
+              border-radius: 1.2rem;
+              left: 33%;
+              top: 45px;
+              position: fixed;
+              z-index: 99999;
+              display: none;
+              background-color: #A0ED05;
+              color: rgba(0,0,0,.75);
+              box-shadow: rgba(172, 142, 142, 0.2) 1px 1px;
+              font-size: 16px;
+              font-family: Lato,Helvetica Neue,Helvetica,sans-serif;
+              font-variant-ligatures: common-ligatures;
+              line-height: 1.67;">
+            </div>
           <div id="viewer" class="pdfViewer"></div>
         </div>
 
