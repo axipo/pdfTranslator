@@ -37,8 +37,6 @@
 
 win端直接[下载](https://github.com/axipo/pdfTranslator/releases)，双击打开使用即可
 
-> **注意细节**： 在弹出翻译卡片后，通过点击非卡片区域（空白区域）取消卡片显示。此时才能进行下一次选择，当翻译卡片显示时划词是**不会更新结果**的。
-
 ### Linux & Mac OS
 
     git clone https://github.com/axipo/pdfTranslator.git
