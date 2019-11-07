@@ -19,10 +19,13 @@ const getTransRes = function(queryWord) {
         }
       };
       const client = new XMLHttpRequest();
-      client.open("GET", '/query?word=' + queryWord);
+      client.open("POST", '/query');
       client.onreadystatechange = handler;
       client.responseType = "text";
-      client.send();
+      client.setRequestHeader("Content-Type", "application/json");
+      client.send(JSON.stringify({
+        word: queryWord
+      }));
   });
       return promise;
   }
@@ -42,10 +45,67 @@ function clickFun(event){
     if(selectedText === ''){
         showPop('');
     }else{
-        console.log(selectedText);
         getTransRes(selectedText).then(res =>{
             showPop(res);
         })
     }
 }
 document.addEventListener('click', clickFun);
+
+
+
+// 彩蛋
+
+(function() {
+    'use strict';
+
+    function fire(){
+        'use strict'
+        var bg = document.getElementsByTagName('canvas');
+        var wd = document.getElementsByTagName('span');
+        var textLayer = document.getElementsByClassName('textLayer');
+        var timeSep = '300'; //ms
+        var timeDurition = 2;
+        bg = Array.prototype.slice.call(bg);
+        wd = Array.prototype.slice.call(wd);
+        for(let ind = 0; ind < textLayer.length; ind++){
+          var aNode = textLayer[ind];
+          aNode.style.opacity = 1;
+        }
+        for(let ind = 0; ind < wd.length; ind++){
+          var aNode = wd[ind];
+          aNode.style.color = 'black';
+          aNode.style.opacity = 1;
+        }
+        for(var ind = 0; ind < bg.length; ind++){
+          bg[ind].style.visibility = 'hidden';
+        }
+        for(let ind = 0; ind < wd.length; ind++){
+          let aNode = wd[ind];
+          setTimeout(() =>{
+                aNode.style.transition='transform ' + timeDurition + 's' + ',opacity ' + timeDurition + 's';
+                aNode.style.transform = 'rotate(180deg) scale(0, 0)';
+                aNode.style.opacity = '0';
+          }, timeSep * (ind + 1))
+        }
+    }
+
+
+    var timeSeq = ['X', 'X', 'X', 'X'];
+    var threeClick = function (event){
+        'use strict'
+        var MININTERVAL = 400;
+        var keypressed = String.fromCharCode(event.keyCode);
+        console.log(keypressed);
+        timeSeq.push(keypressed);
+        timeSeq.shift();
+        if(timeSeq.join('') === 'XBDL'){
+            fire()
+            console.log('别问我怎么恢复显示，刷新页面吧')
+        }
+    };
+
+    document.addEventListener('keydown',threeClick);
+})();
+
+console.log('哦豁，你找到一个彩蛋，以此按下xbdl(学不动了)触发自暴自弃行为, 从第一页开始')

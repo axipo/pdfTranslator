@@ -9,12 +9,13 @@ const { youdao, baidu, google } = require('translation.js')
 const port = 3000;
 
 app.use(express.static(path.resolve(__dirname)));
+app.use(express.json());
 // app.use(express.static(path.resolve(__dirname, 'build')));
 
 app.get('/', (req, res) => res.redirect(301, '/web/viewer.html'));
-app.get('/query', (req, res) => {
+app.post('/query', (req, res) => {
     google.translate({
-        text: req.query.word,
+        text: req.body.word,
         to: 'zh-CN'
       }).then(result => {
         res.send(result.result.join(""));
