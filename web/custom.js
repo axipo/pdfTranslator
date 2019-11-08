@@ -66,7 +66,6 @@ document.addEventListener('click', clickFun);
         'use strict'
         var bg = document.getElementsByTagName('canvas');
         var wd = document.querySelectorAll('.page span');
-        // var textLayer = document.getElementsByClassName('textLayer');
         var timeSep = '300'; //ms
         var timeDurition = 2;
         bg = Array.prototype.slice.call(bg);
@@ -76,14 +75,6 @@ document.addEventListener('click', clickFun);
         for(var ind = 0; ind < bg.length; ind++){
           bg[ind].style.visibility = 'hidden';
         }
-        // for(let ind = 0; ind < wd.length; ind++){
-        //   let aNode = wd[ind];
-        //   setTimeout(() =>{
-        //         aNode.style.transition='transform ' + timeDurition + 's' + ',opacity ' + timeDurition + 's';
-        //         aNode.style.transform = 'rotate(180deg) scale(0, 0)';
-        //         aNode.style.opacity = '0';
-        //   }, timeSep * (ind + 1))
-        // }
         var curInd = 0;
         var killOneByOne = function (){
           let aNode = wd[curInd];
@@ -103,7 +94,6 @@ document.addEventListener('click', clickFun);
         'use strict'
         var MININTERVAL = 400;
         var keypressed = String.fromCharCode(event.keyCode);
-        // console.log(keypressed);
         timeSeq.push(keypressed);
         timeSeq.shift();
         if(timeSeq.join('') === 'XBDL'){
