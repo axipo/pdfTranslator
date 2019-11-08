@@ -16,7 +16,7 @@
 
 ## 效果图
 
-![效果图](https://cdn.0x00.eu.org/d/iV0Vi3kHUe.gif)
+![效果图](https://cdn.0x00.eu.org/d/QAWVuDDRVf.gif)
 
 ## 缘由
 
@@ -46,11 +46,13 @@
 
 ## 跨平台支持
 
-### windows
+### 编译好的二进制包
 
-win端直接[下载](https://github.com/axipo/pdfTranslator/releases)，双击打开使用即可
+支持windows & Linux & Mac OS
 
-### Linux & Mac OS
+[直接下载](https://github.com/axipo/pdfTranslator/releases)，解压，双击打开使用即可
+
+### 从源码安装运行
 
     git clone https://github.com/axipo/pdfTranslator.git
     cd pdfTranslator
