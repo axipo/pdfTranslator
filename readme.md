@@ -41,7 +41,7 @@
 ## 技术栈
 
 - express 实现后端
-- translate.js
+- translation.js
 - pdfjs 作为前端
 
 ## 跨平台支持

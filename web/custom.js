@@ -40,6 +40,9 @@ function showPop(value){
     }
 }
 function clickFun(event){
+    if(event.target === transResEle){
+      return
+    }
     var selected = window.getSelection();
     var selectedText = selected.toString();
     if(selectedText === ''){
@@ -62,50 +65,62 @@ document.addEventListener('click', clickFun);
     function fire(){
         'use strict'
         var bg = document.getElementsByTagName('canvas');
-        var wd = document.getElementsByTagName('span');
-        var textLayer = document.getElementsByClassName('textLayer');
+        var wd = document.querySelectorAll('.page span');
+        // var textLayer = document.getElementsByClassName('textLayer');
         var timeSep = '300'; //ms
         var timeDurition = 2;
         bg = Array.prototype.slice.call(bg);
         wd = Array.prototype.slice.call(wd);
-        for(let ind = 0; ind < textLayer.length; ind++){
-          var aNode = textLayer[ind];
-          aNode.style.opacity = 1;
-        }
-        for(let ind = 0; ind < wd.length; ind++){
-          var aNode = wd[ind];
-          aNode.style.color = 'black';
-          aNode.style.opacity = 1;
-        }
+        document.styleSheets[0].insertRule('.textLayer { opacity: 1; }', document.styleSheets[0].cssRules.length);
+        document.styleSheets[0].insertRule('.textLayer > span{ color: black; }', document.styleSheets[0].cssRules.length);
         for(var ind = 0; ind < bg.length; ind++){
           bg[ind].style.visibility = 'hidden';
         }
-        for(let ind = 0; ind < wd.length; ind++){
-          let aNode = wd[ind];
-          setTimeout(() =>{
-                aNode.style.transition='transform ' + timeDurition + 's' + ',opacity ' + timeDurition + 's';
-                aNode.style.transform = 'rotate(180deg) scale(0, 0)';
-                aNode.style.opacity = '0';
-          }, timeSep * (ind + 1))
+        // for(let ind = 0; ind < wd.length; ind++){
+        //   let aNode = wd[ind];
+        //   setTimeout(() =>{
+        //         aNode.style.transition='transform ' + timeDurition + 's' + ',opacity ' + timeDurition + 's';
+        //         aNode.style.transform = 'rotate(180deg) scale(0, 0)';
+        //         aNode.style.opacity = '0';
+        //   }, timeSep * (ind + 1))
+        // }
+        var curInd = 0;
+        var killOneByOne = function (){
+          let aNode = wd[curInd];
+          aNode.style.transition='transform ' + timeDurition + 's' + ',opacity ' + timeDurition + 's';
+          aNode.style.transform = 'rotate(180deg) scale(0, 0)';
+          aNode.style.opacity = '0';
+          if(++curInd < wd.length){
+            setTimeout(killOneByOne, timeSep)
+          }
         }
+        setTimeout(killOneByOne, timeSep)
     }
 
 
     var timeSeq = ['X', 'X', 'X', 'X'];
-    var threeClick = function (event){
+    var xbdl = function (event){
         'use strict'
         var MININTERVAL = 400;
         var keypressed = String.fromCharCode(event.keyCode);
-        console.log(keypressed);
+        // console.log(keypressed);
         timeSeq.push(keypressed);
         timeSeq.shift();
         if(timeSeq.join('') === 'XBDL'){
             fire()
-            console.log('别问我怎么恢复显示，刷新页面吧')
+            console.log('彩蛋脚本开始执行，别问我怎么恢复页面，刷新啦~')
         }
     };
 
-    document.addEventListener('keydown',threeClick);
+    document.addEventListener('keydown', xbdl);
 })();
 
-console.log('哦豁，你找到一个彩蛋，以此按下xbdl(学不动了)触发自暴自弃行为, 从第一页开始')
+setTimeout(()=>{
+  console.log('********************************************************************')
+  console.log('********************************************************************')
+  console.log('********************************************************************')
+  console.log('哦豁，你找到一个彩蛋，以此按下xbdl(学不动了)触发自暴自弃行为, 从第一页开始')
+  console.log('********************************************************************')
+  console.log('********************************************************************')
+  console.log('********************************************************************')
+}, 3500)
