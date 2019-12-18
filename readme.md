@@ -4,7 +4,7 @@
 
 这是一个具有划词翻译功能的pdf阅读器，用着挺好用开源一下造福众科研人员，**欢迎star**
 
-**online demo** [pdf.hakso.net](https://pdf.hakso.net/)
+[online demo](https://pdf.hakso.net/)
 
 ## 太长不读通道
 [点此下载](https://github.com/axipo/pdfTranslator/releases)，双击打开
